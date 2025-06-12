@@ -81,19 +81,21 @@ export function DazzleAdapter(): Adapter {
 
     // ACCOUNTS
 
-    async linkAccount(account: AdapterAccount) {
-      await db.insert(accounts).values({
-        userId: Number(account.userId), // convert to number as schema expects number
-        type: account.type,
-        provider: account.provider,
-        providerAccountId: account.providerAccountId,
-        access_token: account.access_token,
-        expires_at: account.expires_at ? new Date(account.expires_at * 1000) : undefined, // convert to Date if needed
-        id_token: account.id_token,
-        scope: account.scope,
-        token_type: account.token_type,
-        refresh_token: account.refresh_token,
-      });
+async linkAccount(account: AdapterAccount) {
+  await db.insert(accounts).values({
+    userId: Number(account.userId),
+    type: account.type,
+    provider: account.provider,
+    providerAccountId: account.providerAccountId,
+    access_token: account.access_token,
+    expires_at: account.expires_at
+      ? new Date(account.expires_at * 1000)
+      : undefined,
+    id_token: account.id_token,
+    scope: account.scope,
+    token_type: account.token_type,
+    refresh_token: account.refresh_token,
+  });
     },
 
     async unlinkAccount(params: { provider: string; providerAccountId: string }) {
