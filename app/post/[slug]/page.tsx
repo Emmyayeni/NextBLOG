@@ -42,7 +42,7 @@ const comments = [
 
 export default function BlogPost() {
   const params = useParams();
-  const id = params?.id as string; // ✅ cast for safety
+  const slug = params?.slug as string; // ✅ cast for safety
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme();
   const [blogPost, setBlogPost] = useState()
@@ -51,7 +51,7 @@ export default function BlogPost() {
   useEffect(() => {
     const fetchBlogPost = async () => {
       try {
-        const res = await fetch(`/api/posts/${id}`);
+        const res = await fetch(`/api/posts/${slug}`);
         if (!res.ok) throw new Error("Failed to fetch post");
         const data = await res.json();
         console.log(data)
@@ -60,7 +60,7 @@ export default function BlogPost() {
         console.error(error);
   }
 };
-fetchBlogPost()}, [id]);
+fetchBlogPost()}, [slug]);
 
   return (
     <>

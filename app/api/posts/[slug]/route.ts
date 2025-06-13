@@ -3,13 +3,9 @@ import { posts, users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
 // GET /api/posts/[id]
-export async function GET(req: Request, context: { params: { id: string } }) {
-  const id = parseInt(context.params.id);
-  console.log("Fetching post with ID:", id);
-
-  if (isNaN(id)) {
-    return new Response("Invalid ID", { status: 400 });
-  }
+export async function GET(req: Request, context: { params: { slug: string } }) {
+   const { slug } = context.params;
+  console.log("Fetching post with slug:", slug);
 
   try {
     const result = await db
@@ -30,7 +26,7 @@ export async function GET(req: Request, context: { params: { id: string } }) {
       })
       .from(posts)
       .leftJoin(users, eq(posts.author, users.id))
-      .where(eq(posts.id, id));
+      .where(eq(posts.slug, slug));
 
     console.log("Query result:", result);
 

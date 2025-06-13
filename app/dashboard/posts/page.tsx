@@ -131,7 +131,7 @@ export default function PostsPage() {
                     filteredPosts.map((post) => (
                       <TableRow key={post.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/dashboard/posts/${post.id}`} className="hover:underline">
+                          <Link href={`/dashboard/posts/${post.slug}`} className="hover:underline">
                             {post.title}
                           </Link>
                         </TableCell>
@@ -163,13 +163,13 @@ export default function PostsPage() {
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem asChild>
-                                <Link href={`/post/${post.id}`} className="flex items-center">
+                                <Link href={`/post/${post.slug}`} className="flex items-center">
                                   <Eye className="mr-2 h-4 w-4" />
                                   View
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link href={`/dashboard/posts/${post.id}/edit`} className="flex items-center">
+                                <Link href={`/dashboard/posts/${post.slug}/edit`} className="flex items-center">
                                   <PenSquare className="mr-2 h-4 w-4" />
                                   Edit
                                 </Link>
