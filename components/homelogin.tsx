@@ -135,7 +135,8 @@ const suggestedAuthors = [
 ]
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session } = useSession()
+
   const { theme, setTheme } = useTheme()
   const [bookmarkedPosts, setBookmarkedPosts] = useState(new Set([2, 4]))
   const [followingAuthors, setFollowingAuthors] = useState(new Set(["Mike Chen"]))
@@ -271,7 +272,8 @@ export default function HomePage() {
           <div className="lg:col-span-3 space-y-8">
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-xl p-6 border">
-              <h1 className="text-3xl font-bold mb-2">Welcome back to Ayblog, John! 👋</h1>
+              <h1 className="text-3xl font-bold mb-2">Welcome back to Ayblog,
+                 {session?.user?.name?.split(" ")[0] || "User"}👋</h1>
               <p className="text-muted-foreground mb-4">
                 Here's what's happening in your network today. You have 3 new articles from people you follow.
               </p>

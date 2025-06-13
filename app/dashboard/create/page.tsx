@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import { ImageUpload } from "@/components/image-upload"
+import { useSession } from "next-auth/react"
 
 interface Category {
   id: string;
@@ -24,6 +25,8 @@ export default function CreatePostPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [error,seterror] = useState<string | null>(null)
   const [success,setsuccess] = useState<string | null>(null)
+  const {data:session} = useSession()
+
   useEffect(() => {
     fetch("/api/categories")
       .then(res => res.json())
@@ -81,7 +84,7 @@ export default function CreatePostPage() {
           title: formData.title,
           excerpt: formData.excerpt,
           content: postContent,
-          author: 1, // Replace with actual user ID
+          author: session?.user?.id, // Replace with actual user ID
           featuredImage: imageUrl,
           featured: formData.featured,
           published: formData.published,

@@ -12,19 +12,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Camera, MapPin, Calendar, Globe, Twitter, Github, Linkedin, Save } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 export default function ProfilePage() {
+  const {data:session} = useSession()
   const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    bio: "Passionate web developer and technical writer. I love sharing knowledge about modern web technologies and best practices.",
-    location: "San Francisco, CA",
-    website: "https://johndoe.dev",
-    twitter: "@johndoe",
-    github: "johndoe",
-    linkedin: "johndoe",
-    joinDate: "January 2023",
+    firstName: session?.user?.name?.split(" ")[0] || "",
+    lastName: session?.user?.name?.split(" ")[1] || "",
+    email: session?.user?.email || "",
+    bio: (session?.user as any)?.bio || "This is a short bio about me.",
+    location: (session?.user as any)?.location || "Unknown",
+    avatar: (session?.user as any)?.profilepic || "/placeholder.svg",
+    website: (session?.user as any)?.website || "",
+    twitter: (session?.user as any)?.twitter || "",
+    github: (session?.user as any)?.github || "",
+    linkedin: (session?.user as any)?.linkedin || "",
+    joinDate: (session?.user as any)?.createdAt || "",
   })
 
   const [socialLinks, setSocialLinks] = useState({
