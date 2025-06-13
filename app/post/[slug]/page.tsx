@@ -64,7 +64,7 @@ fetchBlogPost()}, [slug]);
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 bg-background">
         {/* Header */}
         {session ?
           <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -163,11 +163,11 @@ fetchBlogPost()}, [slug]);
           </header>
         }
         {blogPost ?
-        <article className="py-12 px-4">
+        <article className="py-12 px-4 bg-background">
           <div className="container mx-auto max-w-4xl">
             {/* Article Header */}
             <div className="mb-8">
-              <Badge className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600">cat</Badge>
+              <Badge className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600">tech</Badge>
               <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 {blogPost.post?.title}
               </h1>

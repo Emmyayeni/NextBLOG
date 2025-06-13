@@ -259,7 +259,7 @@ export default function CreatePostPage() {
               <CardTitle>Content</CardTitle>
               <CardDescription>Write your blog post content.</CardDescription>
             </CardHeader>
-            <CardContent className="!p-0">
+            <CardContent className="!p-0 bg-background">
               <div className="w-full">
                 {previewMode ? (
                   <div className="prose max-w-none border rounded-md p-4 min-h-[400px]">
@@ -270,12 +270,12 @@ export default function CreatePostPage() {
                     )}
                   </div>
                 ) : (
-                  <Tabs defaultValue="write" className="w-full">
+                  <Tabs defaultValue="write" className="w-full bg-background">
                     <TabsList className="mb-4 w-full">
                       <TabsTrigger value="write" className="flex-1 w-1/2">Write</TabsTrigger>
                       <TabsTrigger value="preview" className="flex-1 w-1/2">Preview</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="write" className="min-h-[400px] w-full">
+                    <TabsContent value="write" className="min-h-[400px] w-full bg-backround">
                       <RichTextEditor value={postContent} onChange={setPostContent} />
                     </TabsContent>
                     <TabsContent value="preview" className="min-h-[400px] w-full">

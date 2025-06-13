@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen bg-gray-50 w-full p-2">
+      <div className="flex min-h-screen bg-background w-full p-2">
         <Suspense fallback={<div>Loading...</div>}>
           <Sidebar className="border-r min-w-[220px]">
             <SidebarHeader className="border-b px-4 py-6">

@@ -68,8 +68,8 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-1 border rounded-md p-2 bg-gray-50">
+    <div className="space-y-2 ">
+      <div className="flex flex-wrap gap-1 border rounded-md p-2 bg-background">
         <Button variant="ghost" size="icon" onClick={() => execCommand("bold")} title="Bold" type="button">
           <Bold className="h-4 w-4" />
         </Button>
