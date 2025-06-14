@@ -14,6 +14,7 @@ import {
   Bell,
   Search,
   BookmarkPlus,
+  Bookmark,
   TrendingUp,
   Users,
   PenSquare,
@@ -142,19 +143,19 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <Link
-                href="/"
-                className="flex items-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-              >
-                <Image
-                  src={logo}
-                  alt="Ayblog Logo"
-                  width={56} // Increased size (was 40 or 50)
-                  height={56}
-                  className="inline-block p-0 m-0"
-                  priority
-                />
-                <span className="ml-3">Ayblog</span>
-              </Link>
+              href="/"
+              className="flex items-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
+              <Image
+                src={logo}
+                alt="Ayblog Logo"
+                width={60}
+                height={60}
+                className="inline-block p-0 m-0"
+                priority
+              />
+              <span className="ml-3">Ayblog</span>
+            </Link>
 
             {/* Search Bar */}
             <div className="hidden md:flex flex-1 max-w-md mx-8 min-w-0">
@@ -319,9 +320,11 @@ export default function HomePage() {
                           <span>4 comments</span>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => toggleBookmark(featuredPost.id)}>
-                          <BookmarkPlus
-                            className={`h-4 w-4 ${bookmarkedPosts.has(featuredPost.id) ? "fill-current" : ""}`}
-                          />
+                          {bookmarkedPosts.has(featuredPost.id) ? (
+                            <Bookmark className="h-4 w-4 text-blue-600 fill-blue-600" />
+                          ) : (
+                            <BookmarkPlus className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -358,7 +361,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {latestPosts.map((post, idx) => (
+                  {latestPosts.map((post) => (
                     <Card
                       key={post.id}
                       className="overflow-hidden hover:shadow-lg transition-all duration-300 border bg-card group"
@@ -383,7 +386,11 @@ export default function HomePage() {
                           className="absolute top-4 right-4 bg-background/80 hover:bg-background"
                           onClick={() => toggleBookmark(post.id)}
                         >
-                          <BookmarkPlus className={`h-4 w-4 ${bookmarkedPosts.has(post.id) ? "fill-current" : ""}`} />
+                          {bookmarkedPosts.has(post.id) ? (
+                            <Bookmark className="h-4 w-4 text-blue-600 fill-blue-600" />
+                          ) : (
+                            <BookmarkPlus className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                       <CardHeader>
