@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -34,92 +34,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { useSession } from "next-auth/react"
-
-const blogPosts = [
-  {
-    id: 1,
-    title: "Getting Started with Next.js 15",
-    excerpt:
-      "Learn how to build modern web applications with the latest features in Next.js 15, including improved performance and developer experience.",
-    author: "Sarah Johnson",
-    date: "2024-01-15",
-    readTime: "5 min read",
-    category: "Development",
-    image: "/placeholder.svg?height=200&width=400",
-    featured: true,
-    isBookmarked: false,
-    likes: 234,
-    comments: 45,
-  },
-  {
-    id: 2,
-    title: "The Future of Web Development",
-    excerpt:
-      "Exploring emerging trends and technologies that will shape the future of web development in 2024 and beyond.",
-    author: "Mike Chen",
-    date: "2024-01-12",
-    readTime: "8 min read",
-    category: "Technology",
-    image: "/placeholder.svg?height=200&width=400",
-    isBookmarked: true,
-    likes: 189,
-    comments: 32,
-  },
-  {
-    id: 3,
-    title: "Building Responsive Designs",
-    excerpt:
-      "Master the art of creating beautiful, responsive designs that work seamlessly across all devices and screen sizes.",
-    author: "Emily Davis",
-    date: "2024-01-10",
-    readTime: "6 min read",
-    category: "Design",
-    image: "/placeholder.svg?height=200&width=400",
-    isBookmarked: false,
-    likes: 156,
-    comments: 28,
-  },
-  {
-    id: 4,
-    title: "JavaScript Performance Tips",
-    excerpt: "Optimize your JavaScript code for better performance with these proven techniques and best practices.",
-    author: "Alex Rodriguez",
-    date: "2024-01-08",
-    readTime: "7 min read",
-    category: "Development",
-    image: "/placeholder.svg?height=200&width=400",
-    isBookmarked: true,
-    likes: 143,
-    comments: 21,
-  },
-  {
-    id: 5,
-    title: "UI/UX Design Principles",
-    excerpt:
-      "Essential design principles every developer should know to create intuitive and user-friendly interfaces.",
-    author: "Lisa Wang",
-    date: "2024-01-05",
-    readTime: "4 min read",
-    category: "Design",
-    image: "/placeholder.svg?height=200&width=400",
-    isBookmarked: false,
-    likes: 98,
-    comments: 15,
-  },
-  {
-    id: 6,
-    title: "Modern CSS Techniques",
-    excerpt: "Discover the latest CSS features and techniques to create stunning visual effects and layouts.",
-    author: "David Kim",
-    date: "2024-01-03",
-    readTime: "5 min read",
-    category: "Development",
-    image: "/placeholder.svg?height=200&width=400",
-    isBookmarked: false,
-    likes: 87,
-    comments: 12,
-  },
-]
+import Footer from "@/components/footer"
 
 const trendingTopics = [
   { name: "Next.js 15", posts: 23 },
@@ -137,25 +52,67 @@ const suggestedAuthors = [
 
 export default function HomePage() {
   const { data: session } = useSession()
-
   const { theme, setTheme } = useTheme()
-  const [bookmarkedPosts, setBookmarkedPosts] = useState(new Set([2, 4]))
+  const userId = session?.user?.id // Make sure your session includes user.id
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<number>>(new Set([2, 4]))
   const [followingAuthors, setFollowingAuthors] = useState(new Set(["Mike Chen"]))
+  const [featuredPost, setFeaturedPost] = useState<any>(null)
+  const [latestPosts, setLatestPosts] = useState<any[]>([])
+  const [featuredLoading, setFeaturedLoading] = useState(true)
+  const [latestLoading, setLatestLoading] = useState(true)
 
-  const featuredPost = blogPosts.find((post) => post.featured)
-  const regularPosts = blogPosts.filter((post) => !post.featured)
+  useEffect(() => {
+    setFeaturedLoading(true)
+    fetch('/api/posts/featured')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) setFeaturedPost(Array.isArray(data) ? data[0] : data)
+      })
+      .catch((error) => {
+        console.error("Error fetching featured post:", error)
+      })
+      .finally(() => setFeaturedLoading(false))
+  }, [])
 
-  const toggleBookmark = (postId: number) => {
-    setBookmarkedPosts((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(postId)) {
-        newSet.delete(postId)
-      } else {
-        newSet.add(postId)
-      }
-      return newSet
-    })
-  }
+  useEffect(() => {
+    setLatestLoading(true)
+    fetch('/api/posts/latest')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setLatestPosts(data)
+        else if (data) setLatestPosts([data])
+      })
+      .catch((error) => {
+        console.error("Error fetching latest posts:", error)
+      })
+      .finally(() => setLatestLoading(false))
+  }, [])
+
+  const toggleBookmark = async (postId: number) => {
+    if (!userId) {
+      alert("You must be logged in to bookmark posts.")
+      return
+    }
+    try {
+      const res = await fetch("/api/bookmark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, postId }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle bookmark");
+      setBookmarkedPosts((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(postId)) {
+          newSet.delete(postId);
+        } else {
+          newSet.add(postId);
+        }
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+    }
+  };
 
   const toggleFollow = (authorName: string) => {
     setFollowingAuthors((prev) => {
@@ -167,6 +124,15 @@ export default function HomePage() {
       }
       return newSet
     })
+  }
+
+  // Helper for initials
+  const getInitials = (name: string | undefined) => {
+    if (!name || typeof name !== "string") return "?"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
   }
 
   return (
@@ -181,7 +147,7 @@ export default function HomePage() {
             >
               <img src={logo.src} alt="Ayblog Logo" className=" inline-block p-0 m-0" width="50px" height="50px" />
               Ayblog
-            </Link> 
+            </Link>
 
             {/* Search Bar */}
             <div className="hidden md:flex flex-1 max-w-md mx-8">
@@ -239,8 +205,8 @@ export default function HomePage() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">John Doe</p>
-                      <p className="text-xs leading-none text-muted-foreground">john@example.com</p>
+                      <p className="text-sm font-medium leading-none">{session?.user?.name || "username"}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{session?.user?.email || "user email"}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -293,27 +259,33 @@ export default function HomePage() {
             </div>
 
             {/* Featured Post */}
-            {featuredPost && (
-              <section>
-                <h2 className="text-2xl font-bold mb-6">Featured Today</h2>
+            <section>
+              <h2 className="text-2xl font-bold mb-6">Featured Today</h2>
+              {featuredLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  <span className="ml-2 text-blue-600">Loading featured post...</span>
+                </div>
+              ) : featuredPost ? (
                 <Card className="overflow-hidden shadow-lg border-0 bg-card">
                   <div className="md:flex">
-                    <div className="md:w-1/2">
+                    <div className="md:w-1/2 flex items-center justify-center bg-gray-100">
                       <Image
-                        src={featuredPost.image || "/placeholder.svg"}
+                        src={featuredPost.featuredImage || "/placeholder.svg"}
                         alt={featuredPost.title}
-                        width={600}
-                        height={400}
-                        className="w-full h-64 md:h-full object-cover"
+                        width={500}
+                        height={300}
+                        className="object-cover w-[500px] h-[300px] rounded-lg"
+                        style={{ minWidth: 500, minHeight: 300, maxWidth: 500, maxHeight: 300 }}
                       />
                     </div>
                     <div className="md:w-1/2 p-6">
-                      <Badge className="mb-3 bg-gradient-to-r from-blue-600 to-purple-600">
-                        {featuredPost.category}
-                      </Badge>
                       <CardHeader className="p-0 mb-4">
                         <CardTitle className="text-2xl mb-2">
-                          <Link href={`/post/${featuredPost.id}`} className="hover:text-primary transition-colors">
+                          <Link href={`/post/${featuredPost.slug}`} className="hover:text-primary transition-colors">
                             {featuredPost.title}
                           </Link>
                         </CardTitle>
@@ -326,17 +298,17 @@ export default function HomePage() {
                         </div>
                         <div className="flex items-center space-x-1">
                           <CalendarDays className="w-4 h-4" />
-                          <span>{new Date(featuredPost.date).toLocaleDateString()}</span>
+                          <span>{featuredPost.createdAt ? new Date(featuredPost.createdAt).toLocaleDateString() : ""}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
-                          <span>{featuredPost.readTime}</span>
+                          <span>5</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <span>{featuredPost.likes} likes</span>
-                          <span>{featuredPost.comments} comments</span>
+                          <span>4 comments</span>
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => toggleBookmark(featuredPost.id)}>
                           <BookmarkPlus
@@ -347,8 +319,10 @@ export default function HomePage() {
                     </div>
                   </div>
                 </Card>
-              </section>
-            )}
+              ) : (
+                <div className="text-center text-muted-foreground">No featured post found.</div>
+              )}
+            </section>
 
             {/* Recent Posts */}
             <section>
@@ -366,67 +340,79 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-6">
-                {regularPosts.map((post) => (
-                  <Card
-                    key={post.id}
-                    className="overflow-hidden hover:shadow-lg transition-all duration-300 border bg-card group"
-                  >
-                    <div className="relative overflow-hidden">
-                      <Image
-                        src={post.image || "/placeholder.svg"}
-                        alt={post.title}
-                        width={400}
-                        height={200}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <Badge className="absolute top-4 left-4 bg-background/80 text-foreground">{post.category}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-4 right-4 bg-background/80 hover:bg-background"
-                        onClick={() => toggleBookmark(post.id)}
-                      >
-                        <BookmarkPlus className={`h-4 w-4 ${bookmarkedPosts.has(post.id) ? "fill-current" : ""}`} />
-                      </Button>
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-lg mb-2">
-                        <Link href={`/post/${post.id}`} className="hover:text-primary transition-colors">
-                          {post.title}
-                        </Link>
-                      </CardTitle>
-                      <CardDescription>{post.excerpt}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                        <div className="flex items-center space-x-2">
-                          <Avatar className="w-6 h-6">
-                            <AvatarImage src="/placeholder.svg" />
-                            <AvatarFallback>
-                              {post.author
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{post.author}</span>
-                        </div>
-                        <span>{post.readTime}</span>
+              {latestLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                  <span className="ml-2 text-blue-600">Loading latest posts...</span>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {latestPosts.map((post, idx) => (
+                    <Card
+                      key={post.id}
+                      className="overflow-hidden hover:shadow-lg transition-all duration-300 border bg-card group"
+                    >
+                      <div className="relative overflow-hidden">
+                        <Image
+                          src={
+                            idx === 0 && post.featuredImage
+                              ? post.featuredImage // Show the latest post's image if available
+                              : post.image || "/placeholder.svg"
+                          }
+                          alt={post.title}
+                          width={400}
+                          height={200}
+                          className="w-[400px] h-[200px] object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{ minWidth: 400, minHeight: 200, maxWidth: 400, maxHeight: 200 }}
+                        />
+                        <Badge className="absolute top-4 left-4 bg-background/80 text-foreground">{post.category}</Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-4 right-4 bg-background/80 hover:bg-background"
+                          onClick={() => toggleBookmark(post.id)}
+                        >
+                          <BookmarkPlus className={`h-4 w-4 ${bookmarkedPosts.has(post.id) ? "fill-current" : ""}`} />
+                        </Button>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>{post.likes} likes</span>
-                          <span>{post.comments} comments</span>
+                      <CardHeader>
+                        <CardTitle className="text-lg mb-2">
+                          <Link href={`/post/${post.slug}`} className="hover:text-primary transition-colors">
+                            {post.title}
+                          </Link>
+                        </CardTitle>
+                        <CardDescription>{post.excerpt}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                          <div className="flex items-center space-x-2">
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src="/placeholder.svg" />
+                              <AvatarFallback>
+                                {getInitials(post.author)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{post.author}</span>
+                          </div>
+                          <span>{post.readTime}</span>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(post.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span>{post.likes} likes</span>
+                            <span>{post.comments} comments</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {post.date ? new Date(post.date).toLocaleDateString() : ""}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </section>
           </div>
 
@@ -467,10 +453,7 @@ export default function HomePage() {
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={author.avatar || "/placeholder.svg"} />
                         <AvatarFallback>
-                          {author.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {getInitials(author.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -519,98 +502,7 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-muted/30 border-t py-12 px-4 mt-16">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Ayblog
-              </h3>
-              <p className="text-muted-foreground">
-                A modern platform for sharing knowledge, stories, and insights with the world.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>
-                  <Link href="/" className="hover:text-foreground transition-colors">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/following" className="hover:text-foreground transition-colors">
-                    Following
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/bookmarks" className="hover:text-foreground transition-colors">
-                    Bookmarks
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard" className="hover:text-foreground transition-colors">
-                    Dashboard
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Categories</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>
-                  <Link href="/category/development" className="hover:text-foreground transition-colors">
-                    Development
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/design" className="hover:text-foreground transition-colors">
-                    Design
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/technology" className="hover:text-foreground transition-colors">
-                    Technology
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/business" className="hover:text-foreground transition-colors">
-                    Business
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
-                    Twitter
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
-                    LinkedIn
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
-                    GitHub
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-foreground transition-colors">
-                    RSS Feed
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Ayblog. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

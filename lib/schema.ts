@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text, timestamp, primaryKey, boolean } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp, primaryKey, boolean, unique } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
  id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -153,4 +153,14 @@ export const postTags = pgTable('post_tags', {
     .references(() => tags.id, { onDelete: 'cascade' }),
 }, (table) => ({
   pk: primaryKey(table.postId, table.tagId),
+}));
+
+// Bookmarks table to allow users to bookmark posts
+export const bookmarks = pgTable("bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  postId: integer("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userPostUnique: unique().on(table.userId, table.postId), // Prevent duplicate bookmarks
 }));

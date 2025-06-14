@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { posts, users } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export async function getUserByAuthorId(authorId: string) {
   try {
@@ -81,3 +81,15 @@ export async function deletePostById(id: string) {
   await db.delete(posts).where(eq(posts.id, Number(id)));
   return true;
 }
+
+
+export async function getLatestFeaturedPost() {
+  const [latestFeaturedPost] = await db
+    .select()
+    .from(posts)
+    .where(eq(posts.featured, true))
+    .orderBy(desc(posts.createdAt))
+    .limit(1);
+
+    return latestFeaturedPost || null;
+  }

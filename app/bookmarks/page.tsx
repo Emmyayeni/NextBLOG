@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -11,66 +12,6 @@ import { CalendarDays, Clock, Search, Bookmark, BookmarkX, FolderPlus, Folder } 
 import Image from "next/image"
 import Link from "next/link"
 
-const bookmarkedPosts = [
-  {
-    id: 2,
-    title: "The Future of Web Development",
-    excerpt:
-      "Exploring emerging trends and technologies that will shape the future of web development in 2024 and beyond.",
-    author: "Mike Chen",
-    date: "2024-01-12",
-    readTime: "8 min read",
-    category: "Technology",
-    image: "/placeholder.svg?height=200&width=400",
-    likes: 189,
-    comments: 32,
-    bookmarkedDate: "2024-01-13",
-    folder: "Web Development",
-  },
-  {
-    id: 4,
-    title: "JavaScript Performance Tips",
-    excerpt: "Optimize your JavaScript code for better performance with these proven techniques and best practices.",
-    author: "Alex Rodriguez",
-    date: "2024-01-08",
-    readTime: "7 min read",
-    category: "Development",
-    image: "/placeholder.svg?height=200&width=400",
-    likes: 143,
-    comments: 21,
-    bookmarkedDate: "2024-01-09",
-    folder: "JavaScript",
-  },
-  {
-    id: 7,
-    title: "Design Systems at Scale",
-    excerpt: "How to build and maintain design systems that work across large organizations and multiple products.",
-    author: "Sarah Johnson",
-    date: "2024-01-05",
-    readTime: "12 min read",
-    category: "Design",
-    image: "/placeholder.svg?height=200&width=400",
-    likes: 298,
-    comments: 67,
-    bookmarkedDate: "2024-01-06",
-    folder: "Design",
-  },
-  {
-    id: 8,
-    title: "Machine Learning for Beginners",
-    excerpt: "A comprehensive introduction to machine learning concepts and practical applications.",
-    author: "Dr. Lisa Wang",
-    date: "2024-01-03",
-    readTime: "15 min read",
-    category: "AI/ML",
-    image: "/placeholder.svg?height=200&width=400",
-    likes: 456,
-    comments: 89,
-    bookmarkedDate: "2024-01-04",
-    folder: "Learning",
-  },
-]
-
 const folders = [
   { name: "Web Development", count: 1, color: "bg-blue-500" },
   { name: "JavaScript", count: 1, color: "bg-yellow-500" },
@@ -79,26 +20,98 @@ const folders = [
 ]
 
 export default function BookmarksPage() {
+  const { data: session, status } = useSession()
+  const userId = session?.user?.id
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFolder, setSelectedFolder] = useState("all")
   const [sortBy, setSortBy] = useState("recent")
-  const [bookmarks, setBookmarks] = useState(new Set(bookmarkedPosts.map((post) => post.id)))
+  const [bookmarks, setBookmarks] = useState<any[]>([])
+  const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredPosts = bookmarkedPosts.filter((post) => {
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.category.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFolder = selectedFolder === "all" || post.folder === selectedFolder
-    return matchesSearch && matchesFolder
-  })
+  useEffect(() => {
+    if (!userId) return
+    setLoading(true)
+    fetch(`/api/bookmark?userId=${userId}`)
+      .then((response) => response.json())
+      .then(async (data: any[]) => {
+        setBookmarks(data)
+        // Fetch post details for each bookmark
+        const postDetails = await Promise.all(
+          data.map(async (bookmark) => {
+            const res = await fetch(`/api/posts/${bookmark.postId}`)
+            if (!res.ok) return null
+            const post = await res.json()
+            return { ...bookmark, ...post }
+          })
+        )
+        setPosts(postDetails.filter(Boolean))
+      })
+      .catch((error) => {
+        console.error("Error fetching bookmarks:", error)
+      })
+      .finally(() => setLoading(false))
+  }, [userId])
 
-  const removeBookmark = (postId: number) => {
-    setBookmarks((prev) => {
-      const newSet = new Set(prev)
-      newSet.delete(postId)
-      return newSet
+  // Helper for initials
+  const getInitials = (name: string | undefined) => {
+    if (!name || typeof name !== "string") return "?"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+  }
+
+  const filteredPosts = posts
+    .filter((post) => {
+      const matchesSearch =
+        post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesFolder = selectedFolder === "all" || post.folder === selectedFolder
+      return matchesSearch && matchesFolder
     })
+    .sort((a, b) => {
+      if (sortBy === "recent") return new Date(b.bookmarkedDate || b.createdAt).getTime() - new Date(a.bookmarkedDate || a.createdAt).getTime()
+      if (sortBy === "oldest") return new Date(a.bookmarkedDate || a.createdAt).getTime() - new Date(b.bookmarkedDate || b.createdAt).getTime()
+      if (sortBy === "title") return (a.title || "").localeCompare(b.title || "")
+      if (sortBy === "author") return (a.author || "").localeCompare(b.author || "")
+      return 0
+    })
+
+  const removeBookmark = async (postId: number) => {
+    if (!userId) return
+    try {
+      const res = await fetch("/api/bookmark", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, postId }),
+      })
+      if (res.ok) {
+        setBookmarks((prev) => prev.filter((post) => post.postId !== postId && post.id !== postId))
+        setPosts((prev) => prev.filter((post) => post.postId !== postId && post.id !== postId))
+      } else {
+        console.error("Failed to remove bookmark")
+      }
+    } catch (error) {
+      console.error("Error removing bookmark:", error)
+    }
+  }
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span>Loading bookmarks...</span>
+      </div>
+    )
+  }
+
+  if (!userId) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span>Please sign in to view your bookmarks.</span>
+      </div>
+    )
   }
 
   return (
@@ -113,7 +126,7 @@ export default function BookmarksPage() {
                 <p className="text-muted-foreground">Your saved articles for later reading</p>
               </div>
               <Badge variant="outline" className="bg-blue-50">
-                {bookmarkedPosts.length} saved articles
+                {posts.length} saved articles
               </Badge>
             </div>
 
@@ -162,12 +175,12 @@ export default function BookmarksPage() {
             <div className="space-y-6">
               {filteredPosts.length > 0 ? (
                 filteredPosts.map((post) => (
-                  <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                  <Card key={post.id || post.postId} className="overflow-hidden hover:shadow-lg transition-all duration-300">
                     <div className="md:flex">
                       <div className="md:w-1/3">
                         <Image
-                          src={post.image || "/placeholder.svg"}
-                          alt={post.title}
+                          src={post.featuredImage || "/placeholder.svg"}
+                          alt={post.title || "Bookmarked post"}
                           width={300}
                           height={200}
                           className="w-full h-48 md:h-full object-cover"
@@ -185,7 +198,7 @@ export default function BookmarksPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeBookmark(post.id)}
+                            onClick={() => removeBookmark(post.id || post.postId)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <BookmarkX className="h-4 w-4" />
@@ -193,8 +206,8 @@ export default function BookmarksPage() {
                         </div>
                         <CardHeader className="p-0 mb-4">
                           <CardTitle className="text-xl mb-2">
-                            <Link href={`/post/${post.id}`} className="hover:text-primary transition-colors">
-                              {post.title}
+                            <Link href={`/post/${post.id || post.postId}`} className="hover:text-primary transition-colors">
+                              {post.title || "Untitled"}
                             </Link>
                           </CardTitle>
                           <CardDescription className="text-base">{post.excerpt}</CardDescription>
@@ -204,17 +217,14 @@ export default function BookmarksPage() {
                             <Avatar className="w-6 h-6">
                               <AvatarImage src="/placeholder.svg" />
                               <AvatarFallback>
-                                {post.author
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
+                                {getInitials(post.author)}
                               </AvatarFallback>
                             </Avatar>
                             <span>{post.author}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <CalendarDays className="w-4 h-4" />
-                            <span>{new Date(post.date).toLocaleDateString()}</span>
+                            <span>{post.date ? new Date(post.date).toLocaleDateString() : ""}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Clock className="w-4 h-4" />
@@ -225,9 +235,14 @@ export default function BookmarksPage() {
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                             <span>{post.likes} likes</span>
                             <span>{post.comments} comments</span>
-                            <span>Saved {new Date(post.bookmarkedDate).toLocaleDateString()}</span>
+                            <span>
+                              Saved{" "}
+                              {post.bookmarkedDate || post.createdAt
+                                ? new Date(post.bookmarkedDate || post.createdAt).toLocaleDateString()
+                                : ""}
+                            </span>
                           </div>
-                          <Link href={`/post/${post.id}`}>
+                          <Link href={`/post/${post.id || post.postId}`}>
                             <Button variant="outline" size="sm">
                               Read Now
                             </Button>
@@ -293,7 +308,7 @@ export default function BookmarksPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Total Bookmarks</span>
-                  <Badge variant="outline">{bookmarkedPosts.length}</Badge>
+                  <Badge variant="outline">{posts.length}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">This Month</span>

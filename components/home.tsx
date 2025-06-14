@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { CalendarDays, Clock, User, ArrowRight, Star, TrendingUp, Users, BookOpen } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import footer from "@/components/footer"
 // import logo from "public/logo.svg" // Removed, use string path instead
 const blogPosts = [
   {
@@ -408,98 +409,7 @@ export default function LoggedOutHomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 dark:bg-slate-950 text-white py-12 px-4">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Ayblog
-              </h3>
-              <p className="text-gray-400">
-                A modern platform for sharing knowledge, stories, and insights with the world.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/home" className="hover:text-white transition-colors">
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/categories" className="hover:text-white transition-colors">
-                    Categories
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/authors" className="hover:text-white transition-colors">
-                    Authors
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/about" className="hover:text-white transition-colors">
-                    About
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Categories</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/category/development" className="hover:text-white transition-colors">
-                    Development
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/design" className="hover:text-white transition-colors">
-                    Design
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/technology" className="hover:text-white transition-colors">
-                    Technology
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/category/business" className="hover:text-white transition-colors">
-                    Business
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Twitter
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    LinkedIn
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    GitHub
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    RSS Feed
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Ayblog. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+    <footer />
     </div>
   )
 }
