@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CalendarDays, Clock, Search, Bookmark, BookmarkX, FolderPlus, Folder } from "lucide-react"
+import { CalendarDays, Clock, Search, Bookmark, BookmarkX, FolderPlus, Folder, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -21,6 +22,7 @@ const folders = [
 
 export default function BookmarksPage() {
   const { data: session, status } = useSession()
+  const router = useRouter()
   const userId = session?.user?.id
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedFolder, setSelectedFolder] = useState("all")
@@ -42,7 +44,9 @@ export default function BookmarksPage() {
             const res = await fetch(`/api/posts/${bookmark.postId}`)
             if (!res.ok) return null
             const post = await res.json()
-            return { ...bookmark, ...post }
+            // If post is nested under 'post', flatten it
+            const postData = post.post ? { ...bookmark, ...post.post, author: post.author } : { ...bookmark, ...post }
+            return postData
           })
         )
         setPosts(postDetails.filter(Boolean))
@@ -66,7 +70,7 @@ export default function BookmarksPage() {
     .filter((post) => {
       const matchesSearch =
         post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.author?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.author?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.category?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesFolder = selectedFolder === "all" || post.folder === selectedFolder
       return matchesSearch && matchesFolder
@@ -75,7 +79,7 @@ export default function BookmarksPage() {
       if (sortBy === "recent") return new Date(b.bookmarkedDate || b.createdAt).getTime() - new Date(a.bookmarkedDate || a.createdAt).getTime()
       if (sortBy === "oldest") return new Date(a.bookmarkedDate || a.createdAt).getTime() - new Date(b.bookmarkedDate || b.createdAt).getTime()
       if (sortBy === "title") return (a.title || "").localeCompare(b.title || "")
-      if (sortBy === "author") return (a.author || "").localeCompare(b.author || "")
+      if (sortBy === "author") return (a.author?.name || "").localeCompare(b.author?.name || "")
       return 0
     })
 
@@ -101,6 +105,7 @@ export default function BookmarksPage() {
   if (status === "loading" || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="animate-spin h-8 w-8 text-blue-600 mr-2" />
         <span>Loading bookmarks...</span>
       </div>
     )
@@ -117,6 +122,14 @@ export default function BookmarksPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
+        {/* Back Button */}
+        <Button
+          variant="outline"
+          className="mb-6"
+          onClick={() => router.push("/")}
+        >
+          ← Back to Home
+        </Button>
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
@@ -215,12 +228,12 @@ export default function BookmarksPage() {
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
                           <div className="flex items-center space-x-2">
                             <Avatar className="w-6 h-6">
-                              <AvatarImage src="/placeholder.svg" />
+                              <AvatarImage src={post.author?.profilePicture || "/placeholder.svg"} />
                               <AvatarFallback>
-                                {getInitials(post.author)}
+                                {getInitials(post.author?.name)}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{post.author}</span>
+                            <span>{post.author?.name}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <CalendarDays className="w-4 h-4" />

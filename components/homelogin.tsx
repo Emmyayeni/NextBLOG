@@ -53,7 +53,7 @@ const suggestedAuthors = [
 export default function HomePage() {
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
-  const userId = session?.user?.id // Make sure your session includes user.id
+  const userId = session?.user?.id
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<number>>(new Set([2, 4]))
   const [followingAuthors, setFollowingAuthors] = useState(new Set(["Mike Chen"]))
   const [featuredPost, setFeaturedPost] = useState<any>(null)
@@ -136,24 +136,31 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background transition-colors">
+    <div className="min-h-screen bg-background transition-colors flex flex-col">
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <Link
-              href="/"
-              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-            >
-              <img src={logo.src} alt="Ayblog Logo" className=" inline-block p-0 m-0" width="50px" height="50px" />
-              Ayblog
-            </Link>
+                href="/"
+                className="flex items-center text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              >
+                <Image
+                  src={logo}
+                  alt="Ayblog Logo"
+                  width={56} // Increased size (was 40 or 50)
+                  height={56}
+                  className="inline-block p-0 m-0"
+                  priority
+                />
+                <span className="ml-3">Ayblog</span>
+              </Link>
 
             {/* Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="hidden md:flex flex-1 max-w-md mx-8 min-w-0">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input placeholder="Search articles, authors, topics..." className="pl-10 bg-muted/50" />
+                <Input placeholder="Search articles, authors, topics..." className="pl-10 bg-muted/50 w-full" />
               </div>
             </div>
 
@@ -169,7 +176,7 @@ export default function HomePage() {
               </Link>
             </nav>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               {/* Theme Toggle */}
               <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                 <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -234,18 +241,19 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+      <main className="container mx-auto px-2 sm:px-4 py-8 flex-1 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-8">
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-xl p-6 border">
-              <h1 className="text-3xl font-bold mb-2">Welcome back to Ayblog,
-                 {session?.user?.name?.split(" ")[0] || "User"}👋</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                Welcome back to Ayblog, {session?.user?.name?.split(" ")[0] || "User"}👋
+              </h1>
               <p className="text-muted-foreground mb-4">
                 Here's what's happening in your network today. You have 3 new articles from people you follow.
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <Link href="/dashboard/create">
                   <Button>
                     <PenSquare className="h-4 w-4 mr-2" />
@@ -260,7 +268,7 @@ export default function HomePage() {
 
             {/* Featured Post */}
             <section>
-              <h2 className="text-2xl font-bold mb-6">Featured Today</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-6">Featured Today</h2>
               {featuredLoading ? (
                 <div className="flex justify-center items-center py-12">
                   <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
@@ -271,30 +279,30 @@ export default function HomePage() {
                 </div>
               ) : featuredPost ? (
                 <Card className="overflow-hidden shadow-lg border-0 bg-card">
-                  <div className="md:flex">
-                    <div className="md:w-1/2 flex items-center justify-center bg-gray-100">
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/2 flex items-center justify-center bg-gray-100 min-w-0">
                       <Image
                         src={featuredPost.featuredImage || "/placeholder.svg"}
                         alt={featuredPost.title}
                         width={500}
                         height={300}
-                        className="object-cover w-[500px] h-[300px] rounded-lg"
-                        style={{ minWidth: 500, minHeight: 300, maxWidth: 500, maxHeight: 300 }}
+                        className="object-cover w-full h-[200px] md:h-[300px] rounded-lg"
+                        style={{ minWidth: 0, maxWidth: 500, maxHeight: 300 }}
                       />
                     </div>
-                    <div className="md:w-1/2 p-6">
+                    <div className="md:w-1/2 p-6 min-w-0">
                       <CardHeader className="p-0 mb-4">
-                        <CardTitle className="text-2xl mb-2">
+                        <CardTitle className="text-lg sm:text-2xl mb-2 truncate">
                           <Link href={`/post/${featuredPost.slug}`} className="hover:text-primary transition-colors">
                             {featuredPost.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="text-base">{featuredPost.excerpt}</CardDescription>
+                        <CardDescription className="text-base line-clamp-2">{featuredPost.excerpt}</CardDescription>
                       </CardHeader>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                         <div className="flex items-center space-x-1">
                           <User className="w-4 h-4" />
-                          <span>{featuredPost.author}</span>
+                          <span className="truncate">{featuredPost.author}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <CalendarDays className="w-4 h-4" />
@@ -305,7 +313,7 @@ export default function HomePage() {
                           <span>5</span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap">
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <span>{featuredPost.likes} likes</span>
                           <span>4 comments</span>
@@ -326,8 +334,8 @@ export default function HomePage() {
 
             {/* Recent Posts */}
             <section>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Latest Articles</h2>
+              <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold">Latest Articles</h2>
                 <div className="flex items-center space-x-2">
                   <Button variant="outline" size="sm">
                     All
@@ -349,7 +357,7 @@ export default function HomePage() {
                   <span className="ml-2 text-blue-600">Loading latest posts...</span>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {latestPosts.map((post, idx) => (
                     <Card
                       key={post.id}
@@ -358,15 +366,15 @@ export default function HomePage() {
                       <div className="relative overflow-hidden">
                         <Image
                           src={
-                            idx === 0 && post.featuredImage
-                              ? post.featuredImage // Show the latest post's image if available
-                              : post.image || "/placeholder.svg"
+                            post.featuredImage ||
+                            post.image ||
+                            "/placeholder.svg"
                           }
                           alt={post.title}
                           width={400}
                           height={200}
-                          className="w-[400px] h-[200px] object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{ minWidth: 400, minHeight: 200, maxWidth: 400, maxHeight: 200 }}
+                          className="w-full h-[200px] object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{ minWidth: 0, maxWidth: 400, maxHeight: 200 }}
                         />
                         <Badge className="absolute top-4 left-4 bg-background/80 text-foreground">{post.category}</Badge>
                         <Button
@@ -379,15 +387,15 @@ export default function HomePage() {
                         </Button>
                       </div>
                       <CardHeader>
-                        <CardTitle className="text-lg mb-2">
+                        <CardTitle className="text-base sm:text-lg mb-2 truncate">
                           <Link href={`/post/${post.slug}`} className="hover:text-primary transition-colors">
                             {post.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription>{post.excerpt}</CardDescription>
+                        <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                        <div className="flex flex-wrap items-center justify-between text-sm text-muted-foreground mb-3 gap-2">
                           <div className="flex items-center space-x-2">
                             <Avatar className="w-6 h-6">
                               <AvatarImage src="/placeholder.svg" />
@@ -395,11 +403,11 @@ export default function HomePage() {
                                 {getInitials(post.author)}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{post.author}</span>
+                            <span className="truncate">{post.author}</span>
                           </div>
                           <span>{post.readTime}</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                             <span>{post.likes} likes</span>
                             <span>{post.comments} comments</span>
@@ -499,7 +507,7 @@ export default function HomePage() {
             </Card>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Footer */}
       <Footer />
