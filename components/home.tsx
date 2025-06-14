@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { CalendarDays, Clock, User, ArrowRight, Star, TrendingUp, Users, BookOpen } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
+// import logo from "public/logo.svg" // Removed, use string path instead
 const blogPosts = [
   {
     id: 1,
@@ -112,12 +112,13 @@ export default function LoggedOutHomePage() {
       <header className="border-b bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link
-              href="/home"
-              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-            >
+             <Link
+                href="/"
+                className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              >
+              <img src="/logo.png" alt="Ayblog Logo" className=" inline-block p-0 m-0" width="50px" height="50px" />
               Ayblog
-            </Link>
+            </Link> 
             <nav className="hidden md:flex items-center space-x-8">
               <Link
                 href="/home"

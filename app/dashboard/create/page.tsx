@@ -69,58 +69,63 @@ export default function CreatePostPage() {
     setImageUrl(url)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      // Find the selected category object to get its ID
-      const selectedCategory = categories.find(cat => cat.name === formData.category)
-      const categoryIds = selectedCategory ? [selectedCategory.id] : []
-
-      await fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: formData.title,
-          excerpt: formData.excerpt,
-          content: postContent,
-          author: session?.user?.id, // Replace with actual user ID
-          featuredImage: imageUrl,
-          featured: formData.featured,
-          published: formData.published,
-          tags: formData.tags,
-          categories: categoryIds,
-        }),
-      })
-      setFormData({
-        title: "",
-        excerpt: "",
-        category: "",
-        tags: "",
-        featured: false,
-        published: false,
-      })
-      setPostContent("")
-      setImageUrl(null)
-    } catch (error) {
-      // Handle error
-      console.error("Failed to create post:", error)
-      seterror("Failed to create post. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-      // Optionally, you can show a success message
-      setsuccess("Post created successfully!")
-    }
-  }
-
-  const handleSaveDraft = async () => {
-  setIsSubmitting(true)
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setsuccess(""); // Clear previous success
+  seterror("");   // Clear previous error
   try {
-    // Find the selected category object to get its ID
-    const selectedCategory = categories.find(cat => cat.name === formData.category)
-    const categoryIds = selectedCategory ? [selectedCategory.id] : []
+    const selectedCategory = categories.find(cat => cat.name === formData.category);
+    const categoryIds = selectedCategory ? [selectedCategory.id] : [];
 
-    await fetch("/api/posts", {
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: formData.title,
+        excerpt: formData.excerpt,
+        content: postContent,
+        author: session?.user?.id,
+        featuredImage: imageUrl,
+        featured: formData.featured,
+        published: formData.published,
+        tags: formData.tags,
+        categories: categoryIds,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to create post");
+    }
+
+    setFormData({
+      title: "",
+      excerpt: "",
+      category: "",
+      tags: "",
+      featured: false,
+      published: false,
+    });
+    setPostContent("");
+    setImageUrl(null);
+    setsuccess("Post created successfully!");
+  } catch (error) {
+    console.error("Failed to create post:", error);
+    seterror("Failed to create post. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleSaveDraft = async () => {
+  setIsSubmitting(true);
+  setsuccess(""); // Clear previous success
+  seterror("");   // Clear previous error
+  try {
+    const selectedCategory = categories.find(cat => cat.name === formData.category);
+    const categoryIds = selectedCategory ? [selectedCategory.id] : [];
+
+    const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -134,7 +139,12 @@ export default function CreatePostPage() {
         tags: formData.tags,
         categories: categoryIds,
       }),
-    })
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to save draft");
+    }
+
     setFormData({
       title: "",
       excerpt: "",
@@ -142,16 +152,16 @@ export default function CreatePostPage() {
       tags: "",
       featured: false,
       published: false,
-    })
-    setPostContent("")
-    setImageUrl(null)
-    setsuccess("Draft saved successfully!")
+    });
+    setPostContent("");
+    setImageUrl(null);
+    setsuccess("Draft saved successfully!");
   } catch (error) {
-    seterror("Failed to save draft. Please try again.")
+    seterror("Failed to save draft. Please try again.");
   } finally {
-    setIsSubmitting(false)
+    setIsSubmitting(false);
   }
-}
+};
 
   return (
     <div className="space-y-6 w-full px-0">

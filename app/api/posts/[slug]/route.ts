@@ -55,7 +55,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   try {
     const { title, content, author, featuredImage, featured, published } = await req.json();
 
-    if (!title || !content || !author || !featuredImage) {
+    if (!title || !content || !author ) {
       return new Response("Missing required fields", { status: 400 });
     }
 

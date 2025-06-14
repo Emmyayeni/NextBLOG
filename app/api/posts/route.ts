@@ -36,7 +36,6 @@ export async function POST(req: Request) {
       !content ||
       !author ||
       !excerpt ||
-      !featuredImage ||
       !Array.isArray(categories) ||
       categories.length === 0
     ) {

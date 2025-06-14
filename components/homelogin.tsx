@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import logo from "@/public/logo.png"
 import {
   CalendarDays,
   Clock,
@@ -178,8 +179,9 @@ export default function HomePage() {
               href="/"
               className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
             >
+              <img src={logo.src} alt="Ayblog Logo" className=" inline-block p-0 m-0" width="50px" height="50px" />
               Ayblog
-            </Link>
+            </Link> 
 
             {/* Search Bar */}
             <div className="hidden md:flex flex-1 max-w-md mx-8">

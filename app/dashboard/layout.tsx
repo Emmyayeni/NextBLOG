@@ -45,12 +45,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Suspense fallback={<div>Loading...</div>}>
           <Sidebar className="border-r min-w-[220px]">
             <SidebarHeader className="border-b px-4 py-6">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-              >
-                Ayblog
-              </Link>
+            <Link
+              href="/"
+              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
+              <img src="/logo.png" alt="Ayblog Logo" className=" inline-block p-0 m-0" width="50px" height="50px" />
+              Ayblog
+            </Link> 
             </SidebarHeader>
             <SidebarContent>
               <div className="px-4 py-2">

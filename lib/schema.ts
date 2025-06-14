@@ -60,7 +60,7 @@ export const posts = pgTable('posts', {
   author: integer('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  featuredImage: text('featured_image').notNull(),
+  featuredImage: text('featured_image'),
   featured: boolean('featured'),
   status: text('status').notNull(),
   likes: integer('likes').notNull().default(0),
