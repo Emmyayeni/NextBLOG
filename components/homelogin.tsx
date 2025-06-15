@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -45,22 +45,61 @@ const trendingTopics = [
   { name: "CSS Grid", posts: 12 },
 ]
 
-const suggestedAuthors = [
-  { name: "Sarah Johnson", followers: "12.5K", avatar: "/placeholder.svg", isFollowing: false },
-  { name: "Mike Chen", followers: "8.9K", avatar: "/placeholder.svg", isFollowing: true },
-  { name: "Emily Davis", followers: "15.2K", avatar: "/placeholder.svg", isFollowing: false },
-]
+type Author = {
+  id: string;
+  name: string;
+  avatar: string;
+  postCount: number;
+  followers?: number;
+}
 
 export default function HomePage() {
   const { data: session } = useSession()
   const { theme, setTheme } = useTheme()
   const userId = session?.user?.id
-  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<number>>(new Set([2, 4]))
-  const [followingAuthors, setFollowingAuthors] = useState(new Set(["Mike Chen"]))
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<number>>(new Set())
+  const [followingAuthors, setFollowingAuthors] = useState<Set<string>>(new Set())
   const [featuredPost, setFeaturedPost] = useState<any>(null)
   const [latestPosts, setLatestPosts] = useState<any[]>([])
   const [featuredLoading, setFeaturedLoading] = useState(true)
   const [latestLoading, setLatestLoading] = useState(true)
+  const [authors, setAuthors] = useState<Author[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch suggested authors
+  useEffect(() => {
+    fetch("/api/suggested-authors")
+      .then((res) => res.json())
+      .then((data) => setAuthors(data))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Fetch bookmarks for the user
+  useEffect(() => {
+    if (!userId) return
+    fetch(`/api/bookmark?userId=${userId}`)
+      .then(res => res.json())
+      .then((data) => {
+        setBookmarkedPosts(new Set(data.map((b: any) => b.postId)))
+      })
+      .catch((error) => {
+        console.error("Error fetching bookmarks:", error)
+      })
+  }, [userId])
+
+  // Fetch following authors for the user
+  useEffect(() => {
+    if (!userId) {
+      setFollowingAuthors(new Set())
+      return
+    }
+    fetch(`/api/following?userId=${userId}`)
+      .then(res => res.json())
+      .then((data) => {
+        setFollowingAuthors(new Set(data.map((item: any) => String(item.followingId))))
+      })
+      .catch(() => setFollowingAuthors(new Set()))
+  }, [userId])
 
   useEffect(() => {
     setFeaturedLoading(true)
@@ -115,19 +154,23 @@ export default function HomePage() {
     }
   };
 
-  const toggleFollow = (authorName: string) => {
-    setFollowingAuthors((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(authorName)) {
-        newSet.delete(authorName)
-      } else {
-        newSet.add(authorName)
-      }
-      return newSet
-    })
-  }
+  const toggleFollow = async (authorId: string) => {
+    if (!userId) return;
+    const authorKey = String(authorId);
+    const res = await fetch("/api/follow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ followerId: userId, followingId: authorId }),
+    });
+    const data = await res.json();
+    setFollowingAuthors(prev => {
+      const newSet = new Set(prev);
+      if (data.followed) newSet.add(authorKey);
+      else newSet.delete(authorKey);
+      return newSet;
+    });
+  };
 
-  // Helper for initials
   const getInitials = (name: string | undefined) => {
     if (!name || typeof name !== "string") return "?"
     return name
@@ -298,7 +341,6 @@ export default function HomePage() {
                             {featuredPost.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="text-base line-clamp-2">{featuredPost.excerpt}</CardDescription>
                       </CardHeader>
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                         <div className="flex items-center space-x-1">
@@ -399,7 +441,6 @@ export default function HomePage() {
                             {post.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="flex flex-wrap items-center justify-between text-sm text-muted-foreground mb-3 gap-2">
@@ -462,29 +503,43 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {suggestedAuthors.map((author, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={author.avatar || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {getInitials(author.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium">{author.name}</p>
-                        <p className="text-xs text-muted-foreground">{author.followers} followers</p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={followingAuthors.has(author.name) ? "outline" : "default"}
-                      onClick={() => toggleFollow(author.name)}
-                    >
-                      {followingAuthors.has(author.name) ? "Following" : "Follow"}
-                    </Button>
+                {loading ? (
+                  <div className="flex justify-center items-center py-6">
+                    <svg className="animate-spin h-6 w-6 text-blue-600" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    <span className="ml-2 text-blue-600">Loading authors...</span>
                   </div>
-                ))}
+                ) : (
+                  authors.map((author: Author) => {
+                    const authorFollowers = author.followers ?? 0;
+                    return (
+                      <div key={author.id} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="w-8 h-8">
+                            <AvatarImage src={author.avatar || "/placeholder.svg"} />
+                            <AvatarFallback>
+                              {getInitials(author.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{author.name}</p>
+                            <p className="text-xs text-muted-foreground">{authorFollowers} followers</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={followingAuthors.has(String(userId)) ? "outline" : "default"}
+                          onClick={() => toggleFollow(author.id)}
+                          disabled={!userId}
+                        >
+                          {followingAuthors.has(String(userId)) ? "Following" : "Follow"}
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
 

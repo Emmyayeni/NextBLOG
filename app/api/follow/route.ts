@@ -1,31 +1,35 @@
-import { db } from "@/lib/db"
-import { follows } from "@/lib/schema"
+import { db } from "@/lib/db";
+import { follows } from "@/lib/schema";
+import { eq, and } from "drizzle-orm";
 
-// POST /api/follow
 export async function POST(req: Request) {
-  try {
-    const { followerId, followingId } = await req.json()
+  const { followerId, followingId } = await req.json();
 
-    if (!followerId || !followingId) {
-      return new Response("Missing followerId or followingId", { status: 400 })
-    }
+  // Use and() to combine conditions
+  const existing = await db
+    .select()
+    .from(follows)
+    .where(
+      and(
+        eq(follows.followerId, followerId),
+        eq(follows.followingId, followingId)
+      )
+    );
 
-    // Prevent self-follow
-    if (followerId === followingId) {
-      return new Response("Cannot follow yourself", { status: 400 })
-    }
-
-    // Insert follow relationship
-    await db.insert(follows).values({
-      followerId,
-      followingId,
-    })
-
-    return new Response(JSON.stringify({ message: "Followed successfully" }), {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
-    })
-  } catch (error) {
-    return new Response("Failed to follow user", { status: 500 })
+  if (existing.length > 0) {
+    // Unfollow
+    await db
+      .delete(follows)
+      .where(
+        and(
+          eq(follows.followerId, followerId),
+          eq(follows.followingId, followingId)
+        )
+      );
+    return Response.json({ followed: false });
+  } else {
+    // Follow
+    await db.insert(follows).values({ followerId, followingId });
+    return Response.json({ followed: true });
   }
 }
