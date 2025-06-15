@@ -65,7 +65,7 @@ export default function HomePage() {
   const [latestLoading, setLatestLoading] = useState(true)
   const [authors, setAuthors] = useState<Author[]>([])
   const [loading, setLoading] = useState(true)
-
+  const [isFollowing, setIsFollowing] = useState(false);
   // Fetch suggested authors
   useEffect(() => {
     fetch("/api/suggested-authors")
@@ -530,11 +530,11 @@ export default function HomePage() {
                         </div>
                         <Button
                           size="sm"
-                          variant={followingAuthors.has(String(userId)) ? "outline" : "default"}
+                          variant={followingAuthors.has(String(author.id)) ? "outline" : "default"}
                           onClick={() => toggleFollow(author.id)}
                           disabled={!userId}
                         >
-                          {followingAuthors.has(String(userId)) ? "Following" : "Follow"}
+                          {followingAuthors.has(String(author.id)) ? "Following" : "Follow"}
                         </Button>
                       </div>
                     );
@@ -542,7 +542,6 @@ export default function HomePage() {
                 )}
               </CardContent>
             </Card>
-
             {/* Quick Stats */}
             <Card>
               <CardHeader>
